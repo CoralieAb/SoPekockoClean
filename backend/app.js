@@ -1,18 +1,25 @@
 const express = require('express');
+const helmet = require('helmet');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const path = require('path');
 
 const sauceRoutes = require('./routes/sauce');
 const userRoutes = require('./routes/user');
 
+require('dotenv').config();
 //Connexion à la base de données
-mongoose.connect('mongodb+srv://<user>:<password>@sopekocko.ssb9u.mongodb.net/sopekocko?retryWrites=true&w=majority',
+mongoose.connect(process.env.MONGODB_URI,
   { useNewUrlParser: true,
     useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée'));
 
+// Création d'une application Express
 const app = express();
+
+//Configure des en-têtes HTTP liés à la sécurité
+app.use(helmet());
 
 //Paramétrage des en-têtes de requête
 app.use((req, res, next) => {
@@ -22,8 +29,10 @@ app.use((req, res, next) => {
   next();
 });
 
-//Pour avoir accès au corps de la requête en JSON utilisable
+//Pour avoir accès au corps de la requête en objet JSON utilisable
 app.use(bodyParser.json());
+
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.use('/api/sauces', sauceRoutes);
 app.use('/api/auth', userRoutes);
