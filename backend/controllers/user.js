@@ -7,6 +7,8 @@ const User = require('../models/User');
 
 exports.signup = (req, res, next) => {
   const email = sanitize(req.body.email);
+  const buffer = Buffer.from(email);
+  const maskedEmail = buffer.toString('base64');
   const password = sanitize(req.body.password);
   if (!passwordValidator.validate(password)) {
     return res.status(400).json({ error: error });
@@ -14,7 +16,7 @@ exports.signup = (req, res, next) => {
   bcrypt.hash(password, 10)
     .then(hash => {
       const user = new User({
-        email: email,
+        email: maskedEmail,
         password: hash
       });
       user.save()
@@ -26,8 +28,10 @@ exports.signup = (req, res, next) => {
 
 exports.login = (req, res, next) => {
   const email = sanitize(req.body.email);
+  const buffer = Buffer.from(email);
+  const maskedEmail = buffer.toString('base64');
   const password = sanitize(req.body.password);
-  User.findOne({ email: email })
+  User.findOne({ email: maskedEmail })
     .then(user => {
       if (!user) {
         return res.status(401).json({ error: error | 'Utilisateur non trouvé !' });
